@@ -3,7 +3,7 @@ import {render, fireEvent, wait} from '@testing-library/react'
 import {Redirect as MockRedirect} from 'react-router'
 import {savePost as mockSavePost} from '../api'
 
-import {Editor} from '../post-editor-04-router-redirect'
+import {Editor} from '../post-editor-05-dates'
 
 jest.mock('react-router', () => {
   return {
@@ -32,9 +32,10 @@ test('renders a form with title, content, tags and a submit button', async () =>
     content: 'Content C',
     tags: ['tag1', 'tag2'],
     authorId: fakeUser.id,
+    date: expect.any(String),
   }
   const {getByLabelText, getByText} = render(<Editor user={fakeUser} />)
-
+  const preDate = new Date().getTime()
   getByLabelText(/title/i).value = fakePost.title
   getByLabelText(/content/i).value = fakePost.content
   getByLabelText(/tags/i).value = fakePost.tags.join(',')
@@ -44,6 +45,11 @@ test('renders a form with title, content, tags and a submit button', async () =>
   expect(submitButton).toBeDisabled()
   expect(mockSavePost).toHaveBeenCalledTimes(1)
   expect(mockSavePost).toBeCalledWith(fakePost)
+
+  const postDate = new Date().getTime()
+  const date = new Date(mockSavePost.mock.calls[0][0].date).getTime()
+  expect(date).toBeGreaterThanOrEqual(preDate)
+  expect(date).toBeLessThan(postDate)
 
   await wait(() => expect(MockRedirect).toHaveBeenCalledWith({to: '/'}, {}))
 })
