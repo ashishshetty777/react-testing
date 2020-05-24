@@ -1,6 +1,7 @@
 import React from 'react'
 import {render, fireEvent, wait} from '@testing-library/react'
 import {Redirect as MockRedirect} from 'react-router'
+import {build, fake, sequence} from 'test-data-bot'
 import {savePost as mockSavePost} from '../api'
 
 import {Editor} from '../post-editor-05-dates'
@@ -24,16 +25,23 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const postBuilder = build('Post').fields({
+  title: fake(f => f.lorem.words()),
+  content: fake(f => f.lorem.paragraphs().replace(/\r/g, '')),
+  tags: fake(f => [f.lorem.word(), f.lorem.word(), f.lorem.word()]),
+})
+
+const userBuilder = build('User').fields({
+  id: sequence(s => `user=${s}`),
+})
+
 test('renders a form with title, content, tags and a submit button', async () => {
   mockSavePost.mockResolvedValueOnce()
-  const fakeUser = {id: 'id-1'}
-  const fakePost = {
-    title: 'Title Y',
-    content: 'Content C',
-    tags: ['tag1', 'tag2'],
-    authorId: fakeUser.id,
-    date: expect.any(String),
-  }
+  const fakeUser = userBuilder()
+  const fakePost = postBuilder({content: `I'm an important content`})
+  fakePost.authorId = fakeUser.id
+  fakePost.date = expect.any(String)
+
   const {getByLabelText, getByText} = render(<Editor user={fakeUser} />)
   const preDate = new Date().getTime()
   getByLabelText(/title/i).value = fakePost.title
