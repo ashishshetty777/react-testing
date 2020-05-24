@@ -1,6 +1,8 @@
 import React from 'react'
 import * as api from './api'
 
+// This is gold if tht api doesnt have good support for jest mock use this trick.
+// i.e make api as * and in the parameter make it a conditional prop for testing
 function GreetingLoader({loadGreeting = api.loadGreeting}) {
   const [greeting, setGreeting] = React.useState('')
   async function loadGreetingForInput(e) {
