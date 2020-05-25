@@ -4,7 +4,7 @@ import {Redirect as MockRedirect} from 'react-router'
 import {build, fake, sequence} from 'test-data-bot'
 import {savePost as mockSavePost} from '../api'
 
-import {Editor} from '../post-editor-05-dates'
+import {Editor} from '../post-editor-07-error-state'
 
 jest.mock('react-router', () => {
   return {
@@ -60,4 +60,21 @@ test('renders a form with title, content, tags and a submit button', async () =>
   expect(date).toBeLessThan(postDate)
 
   await wait(() => expect(MockRedirect).toHaveBeenCalledWith({to: '/'}, {}))
+})
+
+test('renders an error message when the API throws an error', async () => {
+  const errorMessage = 'An error appeared'
+  mockSavePost.mockRejectedValueOnce({data: {error: errorMessage}})
+  const fakeUser = userBuilder()
+  const fakePost = postBuilder({content: `I'm an important content`})
+  fakePost.authorId = fakeUser.id
+  fakePost.date = expect.any(String)
+
+  const {getByText, findByRole} = render(<Editor user={fakeUser} />)
+  const submitButton = getByText(/submit/i)
+
+  fireEvent.click(submitButton)
+  const postError = await findByRole('alert')
+  expect(postError).toHaveTextContent('An error appeared')
+  expect(submitButton).not.toBeDisabled()
 })
